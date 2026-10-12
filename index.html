@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>dddd dccc</title>
+
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+
+html,body{
+
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#050509;
+
+}
+
+
+canvas{
+
+    display:block;
+
+}
+
+
+/* 中间文字 */
+
+.text{
+
+    position:absolute;
+
+    left:50%;
+    top:50%;
+
+    transform:
+    translate(-50%,-50%);
+
+    color:white;
+
+    text-align:center;
+
+    pointer-events:none;
+
+}
+
+
+.logo{
+
+    font-size:30px;
+
+    letter-spacing:14px;
+
+    font-weight:300;
+
+    opacity:.9;
+
+}
+
+
+.sub{
+
+    margin-top:20px;
+
+    font-size:13px;
+
+    letter-spacing:6px;
+
+    color:#aaa;
+
+}
+
+
+
+/* 点击之后 */
+
+.message{
+
+    display:none;
+
+    font-size:22px;
+
+    line-height:2;
+
+    letter-spacing:4px;
+
+}
+
+
+
+.show .logo,
+.show .sub{
+
+    display:none;
+
+}
+
+
+
+.show .message{
+
+    display:block;
+
+}
+
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+
+<canvas id="canvas"></canvas>
+
+
+<div class="text" id="text">
+
+
+<div class="logo">
+
+dddd dccc
+
+</div>
+
+
+<div class="sub">
+
+a little universe
+
+</div>
+
+
+<div class="message">
+
+I found you.<br>
+
+Every tomorrow,<br>
+
+I want you.
+
+♡
+
+</div>
+
+
+</div>
+
+
+
+
+<script>
+
+
+const canvas =
+document.getElementById("canvas");
+
+
+const ctx =
+canvas.getContext("2d");
+
+
+
+let w,h;
+
+
+
+function resize(){
+
+w =
+canvas.width =
+window.innerWidth;
+
+
+h =
+canvas.height =
+window.innerHeight;
+
+}
+
+
+resize();
+
+
+window.onresize=resize;
+
+
+
+
+
+// ====================
+// 手指状态
+// ====================
+
+
+let pointer={
+
+x:-999,
+
+y:-999,
+
+active:false
+
+};
+
+
+
+
+// ====================
+// 粒子
+// ====================
+
+
+let particles=[];
+
+
+
+function heart(t){
+
+
+let x=
+16*Math.pow(Math.sin(t),3);
+
+
+let y=
+13*Math.cos(t)
+-5*Math.cos(2*t)
+-2*Math.cos(3*t)
+-Math.cos(4*t);
+
+
+
+return {
+
+x:x*11,
+
+y:-y*11
+
+};
+
+
+}
+
+
+
+
+
+// 创建爱心粒子
+
+
+for(let i=0;i<1300;i++){
+
+
+let t =
+Math.random()*Math.PI*2;
+
+
+let p =
+heart(t);
+
+
+
+particles.push({
+
+
+x:w/2+p.x,
+
+y:h/2+p.y,
+
+
+homeX:w/2+p.x,
+
+homeY:h/2+p.y,
+
+
+vx:0,
+
+vy:0,
+
+
+size:
+Math.random()*2+0.4,
+
+
+seed:
+Math.random()*10
+
+
+});
+
+
+}
+
+
+
+
+
+
+// ====================
+// 星尘轨迹
+// ====================
+
+
+let trails=[];
+
+
+
+function createTrail(x,y){
+
+
+trails.push({
+
+x:x,
+
+y:y,
+
+life:1,
+
+size:
+Math.random()*5+2
+
+});
+
+
+}
+
+
+
+
+
+
+
+// ====================
+// 动画
+// ====================
+
+
+let time=0;
+
+let explode=false;
+
+
+
+
+function animate(){
+
+
+requestAnimationFrame(animate);
+
+
+ctx.clearRect(
+0,
+0,
+w,
+h
+);
+
+
+
+time+=0.02;
+
+
+
+
+
+// 背景光晕
+
+
+let grd=
+ctx.createRadialGradient(
+
+w/2,
+h/2,
+50,
+
+w/2,
+h/2,
+400
+
+);
+
+
+grd.addColorStop(
+0,
+"rgba(255,50,120,.12)"
+);
+
+
+grd.addColorStop(
+1,
+"rgba(0,0,0,0)"
+);
+
+
+
+ctx.fillStyle=grd;
+
+
+ctx.fillRect(
+0,
+0,
+w,
+h
+);
+
+
+
+
+
+
+// 粒子
+
+
+particles.forEach(p=>{
+
+
+
+// 爆炸
+
+
+if(explode){
+
+
+p.vx +=
+(Math.random()-.5)*5;
+
+
+p.vy +=
+(Math.random()-.5)*5;
+
+
+}
+
+
+
+// 手指吸引
+
+
+let dx=
+pointer.x-p.x;
+
+
+let dy=
+pointer.y-p.y;
+
+
+
+let dis=
+Math.sqrt(
+dx*dx+dy*dy
+);
+
+
+
+if(
+pointer.active &&
+dis<180
+){
+
+
+let power=
+(180-dis)/180;
+
+
+
+p.vx +=
+dx*
+0.004*
+power;
+
+
+
+p.vy +=
+dy*
+0.004*
+power;
+
+
+
+}
+
+
+
+
+
+
+// 回到原位
+
+
+let hx=
+p.homeX-p.x;
+
+
+let hy=
+p.homeY-p.y;
+
+
+
+p.vx+=hx*0.0007;
+
+p.vy+=hy*0.0007;
+
+
+
+
+// 呼吸
+
+
+let breathe=
+Math.sin(
+time+p.seed
+)*0.5+0.5;
+
+
+
+
+p.vx*=0.92;
+
+p.vy*=0.92;
+
+
+
+p.x+=p.vx;
+
+p.y+=p.vy;
+
+
+
+
+
+
+ctx.beginPath();
+
+
+ctx.arc(
+
+p.x,
+
+p.y,
+
+p.size+
+
+breathe*0.8,
+
+0,
+
+Math.PI*2
+
+);
+
+
+
+ctx.fillStyle=
+"rgba(255,80,140,.85)";
+
+
+
+ctx.shadowBlur=20;
+
+ctx.shadowColor=
+"#ff4d91";
+
+
+ctx.fill();
+
+
+
+});
+
+
+
+
+
+
+// 轨迹
+
+
+trails.forEach((t,index)=>{
+
+
+t.life-=0.03;
+
+
+ctx.beginPath();
+
+
+ctx.arc(
+
+t.x,
+
+t.y,
+
+t.size,
+
+0,
+
+Math.PI*2
+
+);
+
+
+ctx.fillStyle=
+`rgba(255,150,200,${t.life})`;
+
+
+ctx.fill();
+
+
+
+if(t.life<=0){
+
+trails.splice(index,1);
+
+}
+
+
+
+});
+
+
+
+}
+
+
+
+
+
+animate();
+
+
+
+
+
+
+
+
+// ====================
+// 手机触摸
+// ====================
+
+
+canvas.addEventListener(
+"touchmove",
+
+e=>{
+
+
+let t=
+e.touches[0];
+
+
+pointer.x=t.clientX;
+
+pointer.y=t.clientY;
+
+
+pointer.active=true;
+
+
+
+createTrail(
+pointer.x,
+pointer.y
+);
+
+
+
+},
+
+{
+passive:true
+}
+
+);
+
+
+
+canvas.addEventListener(
+"touchend",
+
+()=>{
+
+
+pointer.active=false;
+
+
+}
+
+);
+
+
+
+
+
+
+
+// ====================
+// 鼠标测试
+// ====================
+
+
+canvas.addEventListener(
+"mousemove",
+
+e=>{
+
+
+pointer.x=e.clientX;
+
+pointer.y=e.clientY;
+
+pointer.active=true;
+
+
+createTrail(
+pointer.x,
+pointer.y
+);
+
+
+
+});
+
+
+
+canvas.addEventListener(
+"mouseleave",
+
+()=>{
+
+
+pointer.active=false;
+
+
+});
+
+
+
+
+
+
+// ====================
+// 点击
+// ====================
+
+
+canvas.addEventListener(
+"click",
+
+()=>{
+
+
+explode=true;
+
+
+document
+.getElementById("text")
+.classList.add("show");
+
+
+
+});
+
+
+
+</script>
+
+
+</body>
+</html>
